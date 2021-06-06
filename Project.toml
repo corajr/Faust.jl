@@ -1,0 +1,13 @@
+name = "Faust"
+uuid = "b0df9959-3f7b-4e37-9fbf-63cb195e8303"
+authors = ["Cora Johnson-Roberson <cora.johnson.roberson@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
