@@ -58,7 +58,6 @@ end
 #                                              const char* target, 
 #                                              char* error_msg,
 #                                              int opt_level);
-
 function createCDSPFactoryFromString(
     name_app,
     dsp_content,
@@ -91,7 +90,6 @@ end
 # * @return true if the factory internal pointer was really deleted, and false if only 'decremented'.
 # */                                 
 # bool deleteCDSPFactory(llvm_dsp_factory* factory);
-
 function deleteCDSPFactory(factory)
     ret = ccall(
         (:deleteCDSPFactory, find_faust()),
@@ -112,6 +110,7 @@ function getNumInputsCDSPInstance(dsp)
     )
     return ret
 end
+
 # int getNumOutputsCDSPInstance(llvm_dsp* dsp);
 function getNumOutputsCDSPInstance(dsp)
     return ccall(
@@ -248,7 +247,6 @@ end
 # * @return the DSP instance on success, otherwise a null pointer.
 # */
 # llvm_dsp* createCDSPInstance(llvm_dsp_factory* factory);
-
 function createCDSPInstance(factory)
     output_ptr = ccall(
         (:createCDSPInstance, find_faust()),
@@ -268,7 +266,6 @@ end
 #  * @param dsp - the DSP instance to be deleted.
 #  */ 
 # void deleteCDSPInstance(llvm_dsp* dsp);
-
 function deleteCDSPInstance(dsp)
     ccall(
         (:deleteCDSPInstance, find_faust()),
