@@ -2,7 +2,9 @@ module Faust
 
 using Base: UInt8
 
-export createCDSPFactoryFromString, 
+export llvm_dsp, llvm_dsp_factory, 
+    createCDSPFactoryFromString, 
+    writeCDSPFactoryToIR,
     createCDSPInstance,
     getNumInputsCDSPInstance,
     getNumOutputsCDSPInstance,    
@@ -17,14 +19,27 @@ export createCDSPFactoryFromString,
     metadataCDSPInstance,
     computeCDSPInstance,
     deleteCDSPFactory,
-    deleteCDSPInstance
+    deleteCDSPInstance,
+    freeCMemory
 
 function find_faust()
-    "C:\\Program Files\\Faust\\lib\\faust.dll"
+    if haskey(ENV, "FAUSTLDDIR")
+        ENV["FAUSTLDDIR"]
+    elseif Sys.iswindows()
+        "C:\\Program Files\\Faust\\lib\\faust.dll"
+    else
+        "libfaust"
+    end
 end
 
 function find_faust_libraries()
-    "C:\\Program Files\\Faust\\share\\faust"
+    if haskey(ENV, "FAUSTLIB")
+        ENV["FAUSTLIB"]
+    elseif Sys.iswindows()
+        "C:\\Program Files\\Faust\\share\\faust"
+    else
+        "/usr/local/share/faust"
+    end
 end
 
 mutable struct llvm_dsp_factory
@@ -100,6 +115,46 @@ function deleteCDSPFactory(factory)
     return Bool(ret)
 end
 
+function startMTDSPFactories()
+    return Bool(ccall(
+        (:startMTDSPFactories, find_faust()),
+        Cuchar,
+        (),
+    ))
+end
+
+function stopMTDSPFactories()
+    ccall(
+        (:stopMTDSPFactories, find_faust()),
+        Cuchar,
+        (),
+    )
+end
+
+
+# /**
+# * Write a Faust DSP factory into a LLVM IR (textual) string.
+# * 
+# * @param factory - the DSP factory
+# *
+# * @return the LLVM IR (textual) as a string (to be deleted by the caller using freeCMemory).
+# */
+# char* writeCDSPFactoryToIR(llvm_dsp_factory* factory);
+function writeCDSPFactoryToIR(factory)
+    output_str = ccall(
+        (:writeCDSPFactoryToIR, find_faust()),
+        Cstring,
+        (Ptr{llvm_dsp_factory},),
+        factory
+    )
+    if output_str == C_NULL
+        throw(ErrorException("Could not write DSP factory IR"))
+    end
+    copied = GC.@preserve output_str unsafe_string(output_str)
+    freeCMemory(output_str)
+    return copied
+end
+
 # int getNumInputsCDSPInstance(llvm_dsp* dsp);
 function getNumInputsCDSPInstance(dsp)
     ret = ccall(
@@ -131,6 +186,24 @@ function buildUserInterfaceCDSPInstance(dsp, interface)
         Cvoid,
         (Ptr{llvm_dsp}, Ptr{UIGlue}),
         dsp, interface
+    )
+end
+
+# /**
+#  * The free function to be used on memory returned by getCDSPMachineTarget, getCName, getCSHAKey,
+#  * getCDSPCode, getCLibraryList, getAllCDSPFactories, writeCDSPFactoryToBitcode,
+#  * writeCDSPFactoryToIR, writeCDSPFactoryToMachine,expandCDSPFromString and expandCDSPFromFile.
+#  *
+#  * This is MANDATORY on Windows when otherwise all nasty runtime version related crashes can occur.
+#  *
+#  * @param ptr - the pointer to be deleted.
+#  */
+function freeCMemory(p)
+    ccall(
+        (:freeCMemory, find_faust()),
+        Cvoid,
+        (Cstring,),
+        p
     )
 end
 
