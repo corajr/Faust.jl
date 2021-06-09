@@ -1,12 +1,12 @@
 # import Pkg; Pkg.add("FiniteDifferences")
 using Faust, FiniteDifferences
 
-process = compile("process = _ * 2;")
+process = compile("process = _;")
 function f(x)
-    init(process)
+    init(process, block_size=size(x, 1))
     process.inputs = x
     compute(process)
 end
 
 x = randn(256, 1)
-∇f = jacobian(central_fdm(5, 1), f, zeros(256, 1))[1]
+∇f = jacobian(central_fdm(5, 1), f, x)[1]

@@ -24,12 +24,12 @@ mutable struct DSP
     end
 end
 
-function compile(code, name="score", argv=[], target="", opt=-1)
+function compile(code; name="score", argv=[], target="", opt=-1)
     factory = createCDSPFactoryFromString(name, code, argv, target, opt)
     DSP(factory)
 end
 
-function init(d::DSP, block_size=256, sr=22050)
+function init(d::DSP; block_size=256, sr=22050)
     if d.dsp != C_NULL
         deleteCDSPInstance(d.dsp)
     end
