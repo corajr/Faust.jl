@@ -16,8 +16,8 @@ using Test
     @test compute(p0) == zeros(256, 2)
     @test compute(p_) == p_.inputs
 
-    t = (0:255) / 22050
-    t2 = (256:511) / 22050
+    t = (0:255) / posc.samplerate
+    t2 = (256:511) / posc.samplerate
     @test compute(posc) ≈ cos.(2*pi*110*t) atol=0.001
     unsafe_store!(posc.ui.paths["/score/freq"], 220.0)
     @test compute(posc) ≈ cos.(2*pi*220*t2) atol=0.001
