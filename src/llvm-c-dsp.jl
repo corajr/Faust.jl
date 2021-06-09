@@ -1,5 +1,7 @@
 using Base: UInt8
 
+include("uiglue.jl")
+
 export llvm_dsp, llvm_dsp_factory, 
     createCDSPFactoryFromString, 
     writeCDSPFactoryToIR,
@@ -174,15 +176,12 @@ function getNumOutputsCDSPInstance(dsp)
     )
 end
 
-mutable struct UIGlue
-end
-
 # void buildUserInterfaceCDSPInstance(llvm_dsp* dsp, UIGlue* interface);
 function buildUserInterfaceCDSPInstance(dsp, interface)
     return ccall(
         (:buildUserInterfaceCDSPInstance, find_faust()),
         Cvoid,
-        (Ptr{llvm_dsp}, Ptr{UIGlue}),
+        (Ptr{llvm_dsp}, Ref{UIGlue}),
         dsp, interface
     )
 end
