@@ -1,4 +1,4 @@
-using Base: CFunction
+using Base: CFunction, Float32
 
 mutable struct PathBuilder
     controlsLevel::Array{String}
@@ -33,6 +33,13 @@ mutable struct GlueFns
     # declare::CFunction
 end
 
+struct UIRange
+    init::Float32
+    min::Float32
+    max::Float32
+    step::Float32
+end
+
 mutable struct UIGlue
     uiInterface::Ptr{Cvoid}
     openTabBox::Ptr{Cvoid}
@@ -50,7 +57,9 @@ mutable struct UIGlue
     declare::Ptr{Cvoid}
 
     paths::Dict{String, Ptr{Float32}}
+    ranges::Dict{String, UIRange}
     pathBuilder::PathBuilder
+    
 
     gluefns::GlueFns
 
@@ -58,6 +67,7 @@ mutable struct UIGlue
         uglue = new()
         uglue.paths = Dict{String, Ptr{Float32}}()
         uglue.pathBuilder = PathBuilder([])
+        uglue.ranges = Dict{String, UIRange}()
         initGlue(uglue)
     end
 end
@@ -108,6 +118,7 @@ function initGlue(uglue::UIGlue)
     function _addVerticalSlider(ui, label, zone, init, fmin, fmax, step)::Cvoid
         path = buildPath(uglue.pathBuilder, unsafe_string(label))
         uglue.paths[path] = zone
+        uglue.ranges[path] = UIRange(init, fmin, fmax, step)
         nothing
     end
     addVerticalSlider = @cfunction(
@@ -117,6 +128,7 @@ function initGlue(uglue::UIGlue)
     function _addHorizontalSlider(ui, label, zone, init, fmin, fmax, step)::Cvoid
         path = buildPath(uglue.pathBuilder, unsafe_string(label))
         uglue.paths[path] = zone
+        uglue.ranges[path] = UIRange(init, fmin, fmax, step)
         nothing
     end
     addHorizontalSlider = @cfunction(
@@ -126,6 +138,7 @@ function initGlue(uglue::UIGlue)
     function _addNumEntry(ui, label, zone, init, fmin, fmax, step)::Cvoid
         path = buildPath(uglue.pathBuilder, unsafe_string(label))
         uglue.paths[path] = zone
+        uglue.ranges[path] = UIRange(init, fmin, fmax, step)
         nothing
     end
     addNumEntry = @cfunction(
