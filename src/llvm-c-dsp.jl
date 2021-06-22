@@ -1,4 +1,5 @@
 using Base: UInt8
+using faust_jll
 
 include("uiglue.jl")
 
@@ -21,26 +22,6 @@ export llvm_dsp, llvm_dsp_factory,
     deleteCDSPFactory,
     deleteCDSPInstance,
     freeCMemory
-
-function find_faust()
-    if haskey(ENV, "FAUSTLDDIR")
-        ENV["FAUSTLDDIR"]
-    elseif Sys.iswindows()
-        "C:\\Program Files\\Faust\\lib\\faust.dll"
-    else
-        "libfaust"
-    end
-end
-
-function find_faust_libraries()
-    if haskey(ENV, "FAUSTLIB")
-        ENV["FAUSTLIB"]
-    elseif Sys.iswindows()
-        "C:\\Program Files\\Faust\\share\\faust"
-    else
-        "/usr/local/share/faust"
-    end
-end
 
 mutable struct llvm_dsp_factory
 end
@@ -82,11 +63,11 @@ function createCDSPFactoryFromString(
     argc = length(argv)
     error_msg = Vector{UInt8}(undef, 4096)
     output_ptr = cd(() -> ccall(
-        (:createCDSPFactoryFromString, find_faust()),
+        (:createCDSPFactoryFromString, libfaust),
         Ptr{llvm_dsp_factory},
         (Cstring, Cstring, Cint, Ptr{Cstring}, Cstring, Ptr{UInt8}, Cint),
         name_app, dsp_content, argc, argv, target, error_msg, opt_level,
-    ), find_faust_libraries())
+    ), dirname(stdfaust_lib))
     if output_ptr == C_NULL
         error = GC.@preserve error_msg unsafe_string(pointer(error_msg))
         throw(ErrorException("Could not initialize C DSP factory: $error"))
@@ -107,7 +88,7 @@ end
 # bool deleteCDSPFactory(llvm_dsp_factory* factory);
 function deleteCDSPFactory(factory)
     ret = ccall(
-        (:deleteCDSPFactory, find_faust()),
+        (:deleteCDSPFactory, libfaust),
         Cuchar,
         (Ptr{llvm_dsp_factory},),
         factory
@@ -117,7 +98,7 @@ end
 
 function startMTDSPFactories()
     return Bool(ccall(
-        (:startMTDSPFactories, find_faust()),
+        (:startMTDSPFactories, libfaust),
         Cuchar,
         (),
     ))
@@ -125,7 +106,7 @@ end
 
 function stopMTDSPFactories()
     ccall(
-        (:stopMTDSPFactories, find_faust()),
+        (:stopMTDSPFactories, libfaust),
         Cuchar,
         (),
     )
@@ -142,7 +123,7 @@ end
 # char* writeCDSPFactoryToIR(llvm_dsp_factory* factory);
 function writeCDSPFactoryToIR(factory)
     output_str = ccall(
-        (:writeCDSPFactoryToIR, find_faust()),
+        (:writeCDSPFactoryToIR, libfaust),
         Cstring,
         (Ptr{llvm_dsp_factory},),
         factory
@@ -158,7 +139,7 @@ end
 # int getNumInputsCDSPInstance(llvm_dsp* dsp);
 function getNumInputsCDSPInstance(dsp)
     ret = ccall(
-        (:getNumInputsCDSPInstance, find_faust()),
+        (:getNumInputsCDSPInstance, libfaust),
         Cint,
         (Ptr{llvm_dsp},),
         dsp
@@ -169,7 +150,7 @@ end
 # int getNumOutputsCDSPInstance(llvm_dsp* dsp);
 function getNumOutputsCDSPInstance(dsp)
     return ccall(
-        (:getNumOutputsCDSPInstance, find_faust()),
+        (:getNumOutputsCDSPInstance, libfaust),
         Cint,
         (Ptr{llvm_dsp},),
         dsp
@@ -179,7 +160,7 @@ end
 # void buildUserInterfaceCDSPInstance(llvm_dsp* dsp, UIGlue* interface);
 function buildUserInterfaceCDSPInstance(dsp, interface)
     return ccall(
-        (:buildUserInterfaceCDSPInstance, find_faust()),
+        (:buildUserInterfaceCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp}, Ref{UIGlue}),
         dsp, interface
@@ -197,7 +178,7 @@ end
 #  */
 function freeCMemory(p)
     ccall(
-        (:freeCMemory, find_faust()),
+        (:freeCMemory, libfaust),
         Cvoid,
         (Cstring,),
         p
@@ -207,7 +188,7 @@ end
 # int getSampleRateCDSPInstance(llvm_dsp* dsp);
 function getSampleRateCDSPInstance(dsp)
     return ccall(
-        (:getSampleRateCDSPInstance, find_faust()),
+        (:getSampleRateCDSPInstance, libfaust),
         Cint,
         (Ptr{llvm_dsp},),
         dsp
@@ -217,7 +198,7 @@ end
 # void initCDSPInstance(llvm_dsp* dsp, int sample_rate);
 function initCDSPInstance(dsp, sample_rate)
     ccall(
-        (:initCDSPInstance, find_faust()),
+        (:initCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp}, Cint),
         dsp, sample_rate
@@ -227,7 +208,7 @@ end
 # void instanceInitCDSPInstance(llvm_dsp* dsp, int sample_rate);
 function instanceInitCDSPInstance(dsp, sample_rate)
     ccall(
-        (:instanceInitCDSPInstance, find_faust()),
+        (:instanceInitCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp}, Cint),
         dsp, sample_rate
@@ -237,7 +218,7 @@ end
 # void instanceConstantsCDSPInstance(llvm_dsp* dsp, int sample_rate);
 function instanceConstantsCDSPInstance(dsp, sample_rate)
     ccall(
-        (:instanceConstantsCDSPInstance, find_faust()),
+        (:instanceConstantsCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp}, Cint),
         dsp, sample_rate
@@ -247,7 +228,7 @@ end
 # void instanceResetUserInterfaceCDSPInstance(llvm_dsp* dsp);
 function instanceResetUserInterfaceCDSPInstance(dsp)
     ccall(
-        (:instanceResetUserInterfaceCDSPInstance, find_faust()),
+        (:instanceResetUserInterfaceCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp},),
         dsp
@@ -257,7 +238,7 @@ end
 # void instanceClearCDSPInstance(llvm_dsp* dsp);
 function instanceClearCDSPInstance(dsp)
     ccall(
-        (:instanceClearCDSPInstance, find_faust()),
+        (:instanceClearCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp},),
         dsp
@@ -267,7 +248,7 @@ end
 # llvm_dsp* cloneCDSPInstance(llvm_dsp* dsp);
 function cloneCDSPInstance(dsp)
     return ccall(
-        (:cloneCDSPInstance, find_faust()),
+        (:cloneCDSPInstance, libfaust),
         Ptr{llvm_dsp},
         (Ptr{llvm_dsp},),
         dsp
@@ -280,7 +261,7 @@ end
 # void metadataCDSPInstance(llvm_dsp* dsp, MetaGlue* meta);
 function metadataCDSPInstance(dsp, meta)
     ccall(
-        (:metadataCDSPInstance, find_faust()),
+        (:metadataCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp}, Ptr{MetaGlue}),
         dsp, meta,
@@ -301,7 +282,7 @@ function computeCDSPInstance(dsp, count, input = nothing, output = nothing)
     outputRef = [pointer(output, i) for i=1:size(output, 1):length(output)]
 
     ccall(
-        (:computeCDSPInstance, find_faust()),
+        (:computeCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp}, Cint, Ptr{Ptr{Float32}}, Ptr{Ptr{Float32}}),
         dsp, count, inputRef, outputRef
@@ -319,7 +300,7 @@ end
 # llvm_dsp* createCDSPInstance(llvm_dsp_factory* factory);
 function createCDSPInstance(factory)
     output_ptr = ccall(
-        (:createCDSPInstance, find_faust()),
+        (:createCDSPInstance, libfaust),
         Ptr{llvm_dsp},
         (Ptr{llvm_dsp_factory},),
         factory
@@ -338,7 +319,7 @@ end
 # void deleteCDSPInstance(llvm_dsp* dsp);
 function deleteCDSPInstance(dsp)
     ccall(
-        (:deleteCDSPInstance, find_faust()),
+        (:deleteCDSPInstance, libfaust),
         Cvoid,
         (Ptr{llvm_dsp},),
         dsp

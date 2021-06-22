@@ -3,6 +3,9 @@ uuid = "b0df9959-3f7b-4e37-9fbf-63cb195e8303"
 authors = ["Cora Johnson-Roberson <corajr@pm.me> and contributors"]
 version = "0.1.0"
 
+[deps]
+faust_jll = "ee02ff01-307c-5f43-b4c2-04ffc4645b0f"
+
 [compat]
 julia = "1"
 
