@@ -2,9 +2,9 @@ using Faust
 using Test
 
 @testset "Faust.jl" begin
-    p0 = init(compile("process = 0, 0;"))
-    p_ = init(compile("process = _, _;"))
-    posc = init(compile("""
+    p0 = init!(compile("process = 0, 0;"))
+    p_ = init!(compile("process = _, _;"))
+    posc = init!(compile("""
     import("stdfaust.lib");
     freq = hslider("freq", 110, 110, 880, 10);
     t = ba.time : ba.samp2sec;
@@ -13,15 +13,15 @@ using Test
 
     p_.inputs = rand(256, 2)
 
-    @test compute(p0) == zeros(256, 2)
-    @test compute(p_) == p_.inputs
+    @test compute!(p0) == zeros(256, 2)
+    @test compute!(p_) == p_.inputs
 
     @test posc.ui.ranges["/score/freq"] == Faust.UIRange(110, 110, 880, 10)
     t = (0:255) / posc.samplerate
     t2 = (256:511) / posc.samplerate
-    @test compute(posc) ≈ cos.(2*pi*110*t) atol=0.001
-    unsafe_store!(posc.ui.paths["/score/freq"], 220.0)
-    @test compute(posc) ≈ cos.(2*pi*220*t2) atol=0.001
+    @test compute!(posc) ≈ cos.(2*pi*110*t) atol=0.001
+    setparams!(posc, Dict("/score/freq" => 220.0))
+    @test compute!(posc) ≈ cos.(2*pi*220*t2) atol=0.001
 end
 
 @testset "llvm-c-dsp.jl" begin
