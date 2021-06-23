@@ -34,7 +34,7 @@ compile("process = _;"; name="passthrough", argv=["-double", "-vec"])
 
 Each call to `compute!` will calculate `block_size` samples and return the
 output as a matrix of (block_size, n_channels). If the program takes input,
-set `dsp.inputs` to a similar matrix before calling `compute!`:
+set `dsp.inputs` to a (block_size, n_channels) matrix before calling `compute!`:
 
 ```julia
 passthrough = init!(compile("process = _, _;"))
@@ -62,5 +62,5 @@ One can then set the values of these params like:
 setparams!(dsp, Dict("/score/freq" => 220.0f0))
 ```
 
-See [examples/portaudio.jl](examples/portaudio.jl) to see how the DSP can be
-wrapped for audio IO.
+See [examples/portaudio.jl](examples/portaudio.jl) to understand how the DSP can
+be wrapped for audio IO.

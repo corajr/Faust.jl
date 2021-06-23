@@ -81,7 +81,7 @@ end
 """
     compute!(d)
 
-Computes `d.block_size` samples of signal and returns `d.outputs` (d.blocK_size, n_outputs).
+Computes `d.block_size` samples of signal and returns `d.outputs` (d.block_size, n_outputs).
 
 `d.inputs` should be assigned an incoming signals matrix of dims (d.block_size, n_inputs)
 before calling this function.
@@ -107,7 +107,6 @@ julia> compute!(d)
 -0.96961135
 -0.9522513
 ```
-
 """
 function compute!(d::DSPBlock{T}) where T <: FaustFloat
     computeCDSPInstance(d.dsp, d.block_size, d.inputs, d.outputs)
